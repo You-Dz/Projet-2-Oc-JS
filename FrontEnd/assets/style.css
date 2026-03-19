@@ -215,3 +215,130 @@ footer nav ul {
 	font-weight: 500;
 	color: #3D3D3D
 }
+.edit-banner {
+	display: flex;
+	justify-content: center;
+	color: #fffef8;
+	background-color: black;
+	padding: 20px 0px;
+	gap: 21px
+}
+.edit-banner i {
+	color: #fffef8;
+}
+.invisible {
+	display: none !important;
+}
+.projects-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: relative;
+}
+.projects-container h2 {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+}
+.modif-button {
+    display: flex;
+    gap: 10px;           /* espace entre l'icône et le texte */
+    position: relative;   /* reste décalé à droite du h2 */
+	margin-left: 35%;
+	margin-bottom: 25px;
+	border: none;
+	background-color: #fffef8;
+}
+.icon-button {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: #fffef8;
+	border: none;
+}
+.icon-button:hover {
+	border: solid 2px #1D6154;
+}
+/* css modal */
+.modal-background{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: rgba(156, 156, 156, 0.5);
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1000;
+}
+.modal {
+	width: 40%;
+	background-color: #fffef8;
+	border-radius: 10px;
+	padding: 20px;
+	gap: 2em;
+	box-sizing: border-box;
+	
+}
+.modal-content {
+	display: flex;
+	flex-direction: column;
+	gap: 2em;
+	margin: 1em 0;
+}
+.modal-banner {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.close-button, .back-button{
+	font-size: 20px;
+}
+.close-button {
+	margin-left: auto;
+}
+.modal-title {
+	margin: auto;
+	color: black;
+	font-family: 'Work Sans';
+	font-size: 26px;
+}
+.modal-gallery {
+	width: 80%;
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+	grid-column-gap: 10px;
+	grid-row-gap: 40px;
+	margin: auto;
+	padding-bottom: 40px;
+	border-bottom: solid 1px #B3B3B3;
+}
+.modal-gallery img {
+	width: 100%;	
+}
+.modal-button{
+	font-family: 'Syne';
+	font-weight: 700;
+	color: white;
+	background-color: #1D6154;
+	border: solid 2px #1D6154;
+	margin: auto;
+	width: 237px;
+	text-align: center;
+	border-radius: 60px ;
+	height: 36px;
+}
+.modal-figure {
+	position: relative;
+}
+.delete-button {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+}
+.modal-form {
+	display: flex;
+	flex-direction: column;
+}
