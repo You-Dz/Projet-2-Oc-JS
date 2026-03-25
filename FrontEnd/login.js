@@ -7,19 +7,19 @@ form.addEventListener("submit", (event) => {
 })
 async function sendLogin(email, password) {
     const apiSubmit = await fetch("http://localhost:5678/api/users/login", {
-        method : "POST",
+        method : "POST",  //j'envoie des données
         headers : { 
-            "Content-Type":"application/json"
+            "Content-Type":"application/json" // indication les données = JSON
         },
-        body: JSON.stringify({
+        body: JSON.stringify({  // conversion des données en json
             email: email,
             password:password
         })
     })
-    if (!apiSubmit.ok){
+    if (!apiSubmit.ok){  //apiSubmit.ok => vrai si le serveur répond sous la forme 2XX
         manageError()
     } else {
-        const apiResponse = await apiSubmit.json()
+        const apiResponse = await apiSubmit.json() //→ transforme la réponse JSON en objet JS.
         window.localStorage.setItem("token",JSON.stringify(apiResponse.token))
         removeError()
         window.location.href ="index.html"
@@ -41,3 +41,4 @@ function removeError () {
     const errorMessage = document.querySelector(".error-message")
     if (errorMessage) errorMessage.remove()
 }
+

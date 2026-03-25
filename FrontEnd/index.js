@@ -1,0 +1,571 @@
+// Récupération élément DOM
+const portfolio = document.querySelector("#portfolio");
+const projects = portfolio.querySelector("h2")
+const gallery = document.querySelector(".gallery");
+const pageTitle = document.querySelector("header")
+
+//Création DOM mode édition niveau gallerie
+const projectsContainer = document.createElement("div")
+projectsContainer.className = "projects-container"
+
+const modifButton = document.createElement("button")
+modifButton.type = "button"
+modifButton.classList.add("modif-button","invisible","icon-button")
+
+const iconProjects = document.createElement("i")
+iconProjects.classList.add("fa-regular","fa-pen-to-square")
+
+const modifText = document.createElement("span")
+modifText.textContent = "modifier"
+
+//Insertion élément mode édition niveau gallerie
+projectsContainer.appendChild(projects)
+portfolio.prepend(projectsContainer)
+projects.after(modifButton)
+modifButton.appendChild(iconProjects)
+modifButton.appendChild(modifText)
+
+//Création DOM conteneur filtres
+const filterContainer = document.createElement("div")
+filterContainer.classList.add("filter-container")
+//Insertion conteneur filtres
+projectsContainer.after(filterContainer)
+
+//Création banniere mode édition
+const editBanner = document.createElement("div")
+editBanner.classList.add("edit-banner","invisible")
+
+const iconBanner = document.createElement("i")
+iconBanner.classList.add("fa-regular", "fa-pen-to-square")
+
+const textBanner = document.createElement("p")
+textBanner.textContent = "Mode édition"
+
+//Insertion élément bannière mode édition
+pageTitle.before(editBanner)
+editBanner.appendChild(iconBanner)
+editBanner.appendChild(textBanner)
+
+
+
+
+
+
+const baseUrl = "http://localhost:5678/api/"
+
+// METHOD GET
+async function getUrl (url) {
+    console.log("URL appelée :", url) // 👈 DEBUG
+    try {
+        const response = await fetch(url)
+        return await response.json()
+    }
+    catch (error) {
+        console.log("Erreur lors de la récupération des données")
+        return []
+    }
+}
+
+// METHOD DELETE
+async function deleteUrl(url,id) {
+    try {
+        const token = JSON.parse(localStorage.getItem("token"))
+        const response = await fetch(`${url}${Number(id)}`, {
+            method : "DELETE",
+            headers : {
+            "Authorization" : `Bearer ${token}`
+            }
+        })
+        return response.ok
+    }
+    catch (error) {
+        console.log("Erreur lors de la suppression des données",error)
+        return false
+    } 
+}
+
+// METHOD POST 
+async function postUrl(url,data) {
+    try {
+        const token = JSON.parse(localStorage.getItem("token"))
+        const response = await fetch(`${url}`, {
+            method : "POST",
+            headers : {
+                "Authorization" : `Bearer ${token}`
+            },
+            body : data
+        })
+        if (response.ok) {
+            console.log("Données envoyées avec succès")
+                return true
+        } else {
+            console.log("Erreur communication serveur", response.status)
+            return false
+        }
+    }
+    catch (error) {
+        console.log("impossible de communiquer avec le serveur",error)
+        return false
+    }
+}
+// recupération données
+//catégories
+let categories = []
+async function getCategories () {
+    categories = JSON.parse(window.localStorage.getItem("categories"))//Ici le JSON.parse passe les données stockées en json
+    if (categories === null) {
+    categories  = await getUrl (`${baseUrl}categories`) 
+    window.localStorage.setItem("categories", JSON.stringify(categories))
+    }
+    return categories
+    // console.log(categories)
+    }
+// Projets 
+let works = []
+async function getWorks () {
+        works = JSON.parse(window.localStorage.getItem("works"))
+    if(works === null){
+        works = await getUrl(`${baseUrl}works`)
+        window.localStorage.setItem("works", JSON.stringify(works))
+    }
+    return works
+    // console.log(works)
+}
+
+//Création boutons filtres
+function createFilter (categories){ 
+    const buttonAll = document.createElement("button")
+    buttonAll.innerText = "Tous"
+    buttonAll.id = "allCategories"
+    filterContainer.appendChild(buttonAll)
+    categories.forEach(category => {
+        const buttonFilter = document.createElement("button")
+        buttonFilter.innerText = category.name;
+        filterContainer.appendChild(buttonFilter)
+    })
+}
+
+
+//Création gallerie
+function createGallery (works,container){
+    container.innerHTML=""
+    works.forEach(work => {
+        const figure = document.createElement("figure")
+        figure.dataset.id = work.id // On stock l'id du work en data id sur sa figure corespondante
+        const image = document.createElement("img")
+        container.appendChild(figure)
+        figure.appendChild(image)
+        image.src = work.imageUrl
+        image.alt = work.title
+        if (container === gallery){
+            const figCaption = document.createElement("figcaption")
+            image.after(figCaption)
+            figCaption.innerText = work.title
+        }
+    })
+}
+
+
+
+//Dynamique filtre
+let lastCategory = null // On déclare une variable qui n'a pas de valeur de base
+function activFilter () {
+    const buttonAll = document.getElementById("allCategories")
+    buttonAll.addEventListener("click", () => {
+        createGallery(works,gallery)
+    })
+    const buttonFilters = filterContainer.querySelectorAll("button")
+    buttonFilters.forEach(buttonFilter => {
+        buttonFilter.addEventListener("click", (event) => {
+        const chosenCategory = event.target.textContent
+        if (lastCategory === chosenCategory || chosenCategory === "Tous" ){
+            createGallery(works,gallery)
+            lastCategory = null // On réattribue la valeur de base à la variable 
+        } else {
+        const chosenWorks = works.filter(work => work.category.name === chosenCategory)
+        createGallery(chosenWorks,gallery)
+        lastCategory = chosenCategory // On attribut une nouvelle valeur à la variable
+        }
+        })
+    })
+}
+
+
+// Vérification du token qui induit les changement dans le dom 
+function checkToken () {
+    const token = localStorage.getItem("token")
+    if (token){
+        editBanner.classList.remove("invisible")
+        const logLink = document.getElementById ("log-link")
+        logLink.innerText = "logout"
+        // const filterContainer = document.querySelector(".filter-container")
+        filterContainer.classList.add("invisible")
+        modifButton.classList.remove("invisible")
+        modifButton.addEventListener("click", ()=>{
+            createModal(categories)
+        })
+    }
+}
+
+//Dynamique du logout
+const logLink = document.getElementById ("log-link")
+logLink.addEventListener("click", ()=>{
+    const token = localStorage.getItem("token")
+    if (token) {
+        localStorage.removeItem("token")
+        editBanner.classList.add("invisible")
+        filterContainer.classList.remove("invisible")
+        modifButton.classList.add("invisible")
+        logLink.innerText = "login"
+    } else{
+        window.location.href ="login.html"
+    }
+})
+
+async function actualizeLocalStorage (key,fetchFunction) {
+    localStorage.removeItem(key)
+    const data = await fetchFunction()
+    localStorage.setItem(key, JSON.stringify(data)) // Nom sous lequel les données sont stockée= key , valeur = JSON.stringify(data)
+    return data
+}
+
+
+// Section MODAL Modal général - Modal gallerie - Modal ajout photo
+
+function createModal(categories) {
+    // Création du fond du modal
+    const modalBackground = document.createElement("div");
+    modalBackground.classList.add("modal-background");
+    editBanner.before(modalBackground);
+
+    // Création du modal principal
+    const modal = document.createElement("div");
+    modal.classList.add("modal");
+    modalBackground.appendChild(modal);
+
+    // Bannière du modal
+    const modalBanner = document.createElement("div");
+    modalBanner.classList.add("modal-banner");
+    modal.appendChild(modalBanner);
+
+    // Contenu du modal
+    const modalContent = document.createElement("div");
+    modalContent.classList.add("modal-content");
+    modal.appendChild(modalContent);
+
+    // Bouton "back"
+    const backButton = document.createElement("button");
+    backButton.classList.add("back-button", "invisible", "icon-button");
+
+    const backIcon = document.createElement("i");
+    backIcon.classList.add("fa-solid", "fa-arrow-left");
+    backButton.appendChild(backIcon);
+    modalBanner.appendChild(backButton);
+
+    // Bouton "close"
+    const closeButton = document.createElement("button");
+    closeButton.classList.add("close-button", "icon-button");
+
+    const crossIcon = document.createElement("i");
+    crossIcon.classList.add("fa-solid", "fa-xmark");
+    closeButton.appendChild(crossIcon);
+    modalBanner.appendChild(closeButton);
+
+    // Gestionnaire clic pour fermer le modal
+    closeButton.addEventListener("click", () => {
+        closeModal(modalBackground);
+    });
+
+    // Gestionnaire clic pour revenir en arrière dans le modal
+    backButton.addEventListener("click", () => {
+        modalIndex(modalContent, categories);
+    });
+    closeModalsOutsideClick(modalBackground)
+    // Initialisation du contenu du modal
+    modalIndex(modalContent, categories);
+}
+
+function closeModal (modalBackground) {
+    modalBackground.classList.add("invisible");
+}
+
+function closeModalsOutsideClick (modalBackground){
+    modalBackground.addEventListener("click", (event) => {
+        if (event.target === modalBackground) {
+            closeModal (modalBackground);
+        }
+    })
+}
+
+function modalIndex(modalContent, categories) {
+    // Vider le contenu précédent
+    modalContent.innerHTML = "";
+
+    // Cacher le bouton "back" du modal
+    const backButton = modalContent.parentElement.querySelector(".back-button");
+    if (backButton) backButton.classList.add("invisible");
+
+    // Titre du modal
+    const modalTitle = document.createElement("h2");
+    modalTitle.classList.add("modal-title");
+    modalTitle.textContent = "Galerie Photo";
+
+    // Conteneur de la galerie dans le modal
+    const modalGallery = document.createElement("div");
+    modalGallery.classList.add("modal-gallery");
+
+    // Bouton "Ajouter une photo"
+    const modalButton = document.createElement("button");
+    modalButton.classList.add("modal-button");
+    modalButton.textContent = "Ajouter une photo";
+
+    // Ajouter les éléments au modalContent
+    modalContent.appendChild(modalTitle);
+    modalContent.appendChild(modalGallery);
+    modalContent.appendChild(modalButton);
+
+    // Afficher les works existants dans la galerie du modal
+    createGallery(works, modalGallery);
+
+    // Ajouter bouton delete sur chaque figure
+    const figures = modalGallery.querySelectorAll("figure");
+    figures.forEach((figure) => {
+        figure.className = "modal-figure"; // remplacer la classe existante
+        const id = figure.dataset.id // Récupération de l'id stocké lors de la creataion gallery
+
+        // Créer le bouton delete
+        const deleteButton = document.createElement("button");
+        deleteButton.classList.add("delete-button");
+
+        const deleteIcon = document.createElement("i");
+        deleteIcon.classList.add("fa-solid", "fa-trash-can");
+
+        deleteButton.appendChild(deleteIcon);
+        figure.appendChild(deleteButton);
+        deleteButton.addEventListener("click", async () => {
+            // console.log("click détecté", id)
+            // console.log("ID dataset :", id, typeof id)
+            // console.log("ID converti :", Number(id), typeof Number(id))
+            const success = await deleteUrl(baseUrl+"works/",id)
+            if (success) {
+                figure.remove()
+                works = await actualizeLocalStorage("works",getWorks) // "works" => nom de clé de stockage
+                createGallery(works,gallery)
+            }
+        })
+    });
+
+    // Gestionnaire clic pour ajouter une photo
+    modalButton.addEventListener("click", () => {
+        modalAddPhoto(modalContent, categories);
+    });
+}
+
+
+
+function modalAddPhoto(modalContent, categories) {
+    // Vider le contenu précédent
+    modalContent.innerHTML = "";
+
+    // Afficher le bouton "back"
+    const backButton = modalContent.parentElement.querySelector(".back-button");
+    if (backButton) backButton.classList.remove("invisible");
+
+    // Titre du modal
+    const modalTitle = document.createElement("h2");
+    modalTitle.classList.add("modal-title");
+    modalTitle.textContent = "Ajout photo";
+    modalContent.appendChild(modalTitle);
+
+    // Formulaire
+    const form = document.createElement("form");
+    form.classList.add("modal-form");
+    modalContent.appendChild(form);
+
+    // Input photo + label
+    const inputContainer = document.createElement("div")
+    inputContainer.classList.add("input-container")
+    form.appendChild(inputContainer)
+    const previewForm = document.createElement("img")
+    previewForm.id = "preview"
+    previewForm.alt = "Aperçu"
+    previewForm.src= "./assets/icons/previewIcon.png"
+
+    const labelPhoto = document.createElement("label");
+    labelPhoto.htmlFor = "fileInput" // Lie l'input au label
+    labelPhoto.classList.add("upload-button")
+    labelPhoto.textContent = "+ Ajouter photo";
+
+    const inputPhoto = document.createElement("input");
+    inputPhoto.type = "file";
+    inputPhoto.id = "fileInput";
+    inputPhoto.classList.add("input-photo");
+    inputPhoto.accept = "image/jpg, image/png"; 
+
+    const uploadInfo = document.createElement("p")
+    uploadInfo.classList.add("upload-info")
+    uploadInfo.textContent ="jpg,png : 4 mo max"
+
+    inputContainer.appendChild(previewForm);
+    inputContainer.appendChild(labelPhoto);
+    inputContainer.appendChild(inputPhoto);
+    inputContainer.appendChild(uploadInfo)
+
+    // Input titre + label
+    const inputTitle = document.createElement("input");
+    inputTitle.type = "text";
+    inputTitle.classList.add("input-title");
+
+    const labelTitle = document.createElement("label");
+    labelTitle.classList.add("label-title");
+    labelTitle.textContent = "Titre";
+    labelTitle.appendChild(inputTitle);
+    form.appendChild(labelTitle);
+
+    // Select catégorie + label
+    const selectCategories = document.createElement("select");
+    selectCategories.classList.add("select-categories");
+
+    const labelCategories = document.createElement("label");
+    labelCategories.classList.add("label-categories")
+    labelCategories.textContent = "Catégorie";
+    //Option  par defaut du select
+    const defaultOption = document.createElement("option")
+    defaultOption.value = ""
+    defaultOption.textContent = "Veuillez sélectionner une catégorie"
+    defaultOption.selected = true;  
+    defaultOption.disabled = true;
+    selectCategories.appendChild(defaultOption)
+    //Options du select
+    categories.forEach(category => {
+        const option = document.createElement("option");
+        option.classList.add("options");
+        option.value = category.id // L'API attend l'id pas le name
+        option.textContent = category.name;
+        selectCategories.appendChild(option);
+    });
+
+    labelCategories.appendChild(selectCategories);
+    form.appendChild(labelCategories);
+    // Bouton envoie
+    const modalButton = document.createElement("button");
+    modalButton.type = "submit"
+    modalButton.classList.add("modal-button","modal-button-alt");
+    modalButton.textContent = "Valider";
+    form.appendChild(modalButton)
+
+    //Message erreur
+    const messageError = document.createElement("p")
+    messageError.classList.add("message-error","invisible")
+    messageError.textcontent=""
+    form.after(messageError)
+
+
+    previewUpload(previewForm,inputPhoto)
+    submitAddPhoto(form,inputPhoto,inputTitle,previewForm,selectCategories,modalContent)
+}
+
+
+
+    // Envoie du formulaire 
+// const form = document.querySelector(".modal-form")
+// form.addEventListener("submit", (event) => {
+//     event.preventDefault()
+//     const formData = new FormData(form)
+//     console.log(formData)
+// })
+// }
+function showMessageError (message){
+    const messageError =document.querySelector(".message-error")
+    messageError.classList.remove("invisible")
+    messageError.textContent = message
+}
+function hideMessageError (){
+    const messageError =document.querySelector(".message-error")
+    messageError.classList.add("invisible")
+    messageError.textContent = ""
+
+}
+function submitAddPhoto (form,inputPhoto,inputTitle,previewForm,selectCategories,modalContent) {
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault()
+        const formData = new FormData() // Ici on ne met rien en paramètre on déclare manuellement ce qu'on envoie ci-dessous sinon reprend chaque .name du form
+        formData.append("image", inputPhoto.files[0]); // fichier
+        formData.append("title", inputTitle.value.trim()); // texte
+        formData.append("category", Number(selectCategories.value)); // id numérique
+        const file = inputPhoto.files[0]
+        if (!file) {
+            showMessageError("Veuillez ajouter une image avant de valider")
+            return
+        }
+        if (!checkFileSize(file, previewForm,inputPhoto)) {
+            showMessageError("Attention le fichier sélectionné est supérieur à 4 mo")
+            return
+        }
+        if (!inputTitle.value.trim()) {
+            showMessageError("Veuillez donner un titre à votre photo" )
+            console.log("erreur")
+            return
+        }
+        if (!selectCategories.value) {
+            showMessageError("Veuillez sélectionner une catégorie pour votre photo" )
+            return         
+        }
+        for (let [key, value] of formData.entries()) {
+    console.log(key, value);
+}
+        const success = await postUrl(baseUrl + "works/", formData)
+        if (success) {
+            console.log("Photo ajoutée!")
+            works = await actualizeLocalStorage ("works", getWorks)
+            createGallery(works, gallery);
+            modalIndex(modalContent,categories)
+        } else {
+            showMessageError("Erreur lors de l'envoie au serveur")
+        }
+    })
+}
+
+//Gestion ajout photo : Preview & restriction photo
+
+function previewUpload (previewForm,inputPhoto) {
+    // const previewForm = document.getElementById("preview")
+    // const inputPhoto = document.querySelector(".input-photo")
+    const uploadInfo = document.querySelector(".upload-info")
+    inputPhoto.addEventListener("change", (event) => {
+    const file = event.target.files[0] //  récupération fichier choisi => en tableau
+    if (!file){
+        previewForm.src= "./assets/icons/previewIcon.png"
+        uploadInfo.textContent = "jpg,png : 4 mo max"
+        return // return stop l'execution du reste de la fonction
+        } 
+    if (!checkFileSize(file, previewForm,inputPhoto)) {
+        return
+    } 
+    const imageUrl = URL.createObjectURL(file) // on crée un url temporaire 
+    previewForm.src = imageUrl // On attribue l'URL créé à l'image 
+    })
+}
+
+function checkFileSize (file, previewForm,inputPhoto) {
+    const maxSize = 4 * 1024 * 1024
+    const uploadInfo = document.querySelector(".upload-info")
+    if (file.size > maxSize) {
+        inputPhoto.value = ""
+        uploadInfo.textContent = "Attention le fichier sélectionné est supérieur à 4 mo"
+        previewForm.src = "./assets/icons/previewIcon.png"
+        return false
+    } 
+    return true
+}
+
+//Launcher
+async function init() {
+    categories = await getCategories()
+    works = await getWorks()
+    createFilter(categories)
+    createGallery(works,gallery)
+    activFilter()
+    checkToken()
+}
+init()

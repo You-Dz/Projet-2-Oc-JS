@@ -1,3 +1,7 @@
+    // const baseURL 
+    // function get (url){
+    //     await fetch(url)
+    // }
     // Fonction Création du DOM
 function creation (tag, className, content){
     const element = document.createElement(tag)
@@ -27,13 +31,13 @@ const filterContainer =creation("div","filter-container")
 projectsContainer.after(filterContainer) // Ajoute la nouvelle div après le conteneur sup
 //Création bannière Edition
 const editBanner = creation("div","edit-banner invisible")
-const pageTtile = document.querySelector("header")
-pageTtile.before(editBanner)
+const pageTitle = document.querySelector("header")
+pageTitle.before(editBanner)
 const iconBanner = creation("i","fa-regular fa-pen-to-square")
 const textBanner = creation("p",null,"Mode édition")
 editBanner.appendChild(iconBanner)
 editBanner.appendChild(textBanner)
-pageTtile.classList.add("edit-option")
+pageTitle.classList.add("edit-option")
 
 // Récupération des catégories dans l'api + création des boutons de filtres
 let categories = []
@@ -201,6 +205,7 @@ function modalAddPhoto (modalContent, categories) {
     modalContent.appendChild(form)
     const inputPhoto = creation("input", "input-photo")
     inputPhoto.type = "file"
+    // inputPhoto.accept =".jpg, .jpeg, .png"
     const labelPhoto = creation("label","", "+ Ajouter photo")
     labelPhoto.appendChild(inputPhoto)
     form.appendChild(labelPhoto)
