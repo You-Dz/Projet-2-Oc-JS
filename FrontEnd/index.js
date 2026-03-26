@@ -110,7 +110,7 @@ async function postUrl(url,data) {
 // Get datas
 
 //Categories
-let categories = []
+// let categories = [] en commentaire car plus utilisé en global
 async function getCategories () {
     categories = JSON.parse(window.localStorage.getItem("categories"))//Ici le JSON.parse passe les données stockées en json
     if (categories === null) {
@@ -122,7 +122,7 @@ async function getCategories () {
     }
 
 // Projects 
-let works = []
+// let works = []
 async function getWorks () {
         works = JSON.parse(window.localStorage.getItem("works"))
     if(works === null){
@@ -172,7 +172,7 @@ function createGallery (works,container){
 
 //function filter behavior
 let lastCategory = null // On déclare une variable qui n'a pas de valeur de base
-function activFilter () {
+function activFilter (works) {
     const buttonAll = document.getElementById("allCategories")
     buttonAll.addEventListener("click", () => {
         createGallery(works,gallery)
@@ -195,7 +195,7 @@ function activFilter () {
 
 
 // function token verification in index page
-function checkToken () {
+function checkToken (categories,works) {
     const token = localStorage.getItem("token")
     if (token){
         editBanner.classList.remove("invisible")
@@ -205,7 +205,7 @@ function checkToken () {
         projectsContainer.classList.add("projects-container-editor")
         modifButton.classList.remove("invisible")
         modifButton.addEventListener("click", ()=>{
-            createModal(categories)
+            createModal(categories,works)
         })
     }
 }
@@ -226,6 +226,7 @@ logLink.addEventListener("click", ()=>{
     }
 })
 
+ // function actualize storage from API
 async function actualizeLocalStorage (key,fetchFunction) {
     localStorage.removeItem(key)
     const data = await fetchFunction()
@@ -238,7 +239,7 @@ async function actualizeLocalStorage (key,fetchFunction) {
 
 // function create modal global
 
-function createModal(categories) {
+function createModal(categories,works) {
     // Create background
     const modalBackground = document.createElement("div");
     modalBackground.classList.add("modal-background");
@@ -284,11 +285,11 @@ function createModal(categories) {
 
     // backbutton behavior
     backButton.addEventListener("click", () => {
-        modalIndex(modalContent, categories);
+        modalIndex(modalContent,categories,works);
     });
     closeModalsOutsideClick(modalBackground)
     // Initialize modal content
-    modalIndex(modalContent, categories);
+    modalIndex(modalContent,categories,works);
 }
 
 // close functions part 
@@ -305,7 +306,7 @@ function closeModalsOutsideClick (modalBackground){
 }
 
 
-function modalIndex(modalContent, categories) {
+function modalIndex(modalContent, categories,works) {
     // empty content to refill
     modalContent.innerHTML = "";
 
@@ -352,6 +353,17 @@ function modalIndex(modalContent, categories) {
         deleteButton.appendChild(deleteIcon);
         figure.appendChild(deleteButton);
 
+        deleteWork(figure, deleteButton, id, works, gallery)
+    });
+
+    // Index'buttons to next modal beahavior
+    modalButton.addEventListener("click", () => {
+        modalAddPhoto(modalContent, categories,works);
+    });
+}
+
+// function delete with Delete button 
+function deleteWork (figure, deleteButton, id, works, gallery) {
         // Delete button behavior
 
         deleteButton.addEventListener("click", async () => {
@@ -362,17 +374,10 @@ function modalIndex(modalContent, categories) {
                 createGallery(works,gallery)
             }
         })
-    });
-
-    // Index'buttons to next modal beahavior
-    modalButton.addEventListener("click", () => {
-        modalAddPhoto(modalContent, categories);
-    });
 }
 
 
-
-function modalAddPhoto(modalContent, categories) {
+function modalAddPhoto(modalContent, categories, works) {
     // empty content to refill
     modalContent.innerHTML = "";
 
@@ -477,12 +482,12 @@ function modalAddPhoto(modalContent, categories) {
     // create Message error area
     const messageError = document.createElement("p")
     messageError.classList.add("message-error","invisible")
-    messageError.textcontent= ""
+    messageError.textContent= ""
     form.after(messageError)
 
     // Call for functions
     previewUpload(previewForm,inputPhoto)
-    submitAddPhoto(form,inputPhoto,inputTitle,previewForm,selectCategories,modalContent)
+    submitAddPhoto(works,categories,form,inputPhoto,inputTitle,previewForm,selectCategories,modalContent)
 }
 
 
@@ -500,7 +505,7 @@ function hideMessageError (){
 }
 
 // submit function with use Method POST
-function submitAddPhoto (form,inputPhoto,inputTitle,previewForm,selectCategories,modalContent) {
+function submitAddPhoto (works,categories,form,inputPhoto,inputTitle,previewForm,selectCategories,modalContent) {
     form.addEventListener("submit", async (event) => {
         event.preventDefault()
         const formData = new FormData() // Ici on ne met rien en paramètre on déclare manuellement ce qu'on envoie ci-dessous sinon reprend chaque .name du form
@@ -533,7 +538,7 @@ function submitAddPhoto (form,inputPhoto,inputTitle,previewForm,selectCategories
             console.log("Photo ajoutée!")
             works = await actualizeLocalStorage ("works", getWorks)
             createGallery(works, gallery);
-            modalIndex(modalContent,categories)
+            modalIndex(modalContent,categories,works)
         } else {
             showMessageError("Erreur lors de l'envoie au serveur")
         }
@@ -574,11 +579,11 @@ function checkFileSize (file, previewForm,inputPhoto) {
 
 //Launcher
 async function init() {
-    categories = await getCategories()
-    works = await getWorks()
+    const categories = await getCategories()
+    const works = await getWorks()
     createFilter(categories)
     createGallery(works,gallery)
-    activFilter()
-    checkToken()
+    activFilter(works)
+    checkToken(categories,works)
 }
 init()
