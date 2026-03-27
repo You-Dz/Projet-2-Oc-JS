@@ -309,7 +309,7 @@ footer nav ul {
 	gap: 2em;
 	margin: 1em 0;
 }
-.modal-banner {
+.modal-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
@@ -433,7 +433,7 @@ footer nav ul {
 
 /* submit button */
 
-.modal-button-alt {
+.modal-button-disabled {
 	background-color: #a7a7a7;
 	border: solid 2px #a7a7a7;
 }
