@@ -716,11 +716,13 @@ logLink.addEventListener("click", ()=>{
     const token = localStorage.getItem("token")
     if (token) {
         localStorage.removeItem("token")
-        editBanner.classList.add("invisible")
-        projectsContainer.classList.remove("projects-container-editor")
-        filterContainer.classList.remove("invisible")
-        modifButton.classList.add("invisible")
-        logLink.innerText = "login"
+        //Option de refresh auto expérience utilisateur manuel possible
+        window.location.reload() 
+        // editBanner.classList.add("invisible")
+        // projectsContainer.classList.remove("projects-container-editor")
+        // filterContainer.classList.remove("invisible")
+        // modifButton.classList.add("invisible")
+        // logLink.innerText = "login"
     } else{
         window.location.href ="login.html"
     }

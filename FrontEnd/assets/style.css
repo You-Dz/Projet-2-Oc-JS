@@ -431,6 +431,12 @@ footer nav ul {
 	border-bottom: solid 1px #B3B3B3;
 }
 
+/* Message user*/
+.message-to-user {
+
+text-align: center;
+}
+
 /* submit button */
 
 .modal-button-disabled {
